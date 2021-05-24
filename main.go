@@ -21,7 +21,12 @@ func main() {
 	nullAuth := "null"
 	var auth string
 
+	var botId string
+	var chatId string
+
 	flag.StringVar(&auth, "auth", nullAuth, "Authentication password")
+	flag.StringVar(&botId, "botid", nullAuth, "Telegram BotId")
+	flag.StringVar(&chatId, "chatid", nullAuth, "Telegram ChatId")
 
 	flag.StringVar(&ipAddr, "a", "0.0.0.0", "IP address for repository  to listen on")
 	flag.IntVar(&portNum, "p", 8080, "TCP port for repository to listen on")
@@ -36,7 +41,7 @@ func main() {
 	}
 
 	serveAddr := net.JoinHostPort(ipAddr, strconv.Itoa(portNum))
-	router := initApp(auth)
+	router := initApp(auth, botId, chatId)
 
 	glog.Info("Listening...\n")
 	http.ListenAndServe(serveAddr, router)
@@ -57,7 +62,7 @@ func validateInput(name string, available []string) bool {
 	return found
 }
 
-func initApp(auth string) http.Handler {
+func initApp(auth string, botId string, chatId string) http.Handler {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
@@ -76,7 +81,10 @@ func initApp(auth string) http.Handler {
 		if providedAuth == auth && validateInput(name, services) && validateInput(action, actions) {
 			success := executeServiceAction(name, action)
 			if success {
-				c.String(http.StatusOK, fmt.Sprintf("Service action %s on %s successfull", action, name))
+				message := fmt.Sprintf("Service action %s on %s successfull", action, name)
+				c.String(http.StatusOK, message)
+
+				sendBotMessage(message, botId, chatId)
 				glog.Info("Action performed\n")
 			} else {
 				c.String(http.StatusInternalServerError, fmt.Sprintf("Service action %s on %s FAILED", action, name))
