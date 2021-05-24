@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
 	ginglog "github.com/szuecs/gin-glog"
-	"log"
 	"net"
 	"net/http"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -28,6 +28,7 @@ func main() {
 	flag.Parse()
 
 	glog.Infof("auth: %s\n", auth)
+	glog.Infof("port: %d\n", portNum)
 
 	if auth == nullAuth {
 		glog.Error("auth not provided")
@@ -36,7 +37,11 @@ func main() {
 
 	serveAddr := net.JoinHostPort(ipAddr, strconv.Itoa(portNum))
 	router := initApp(auth)
+
+	glog.Info("Listening...\n")
 	http.ListenAndServe(serveAddr, router)
+
+	glog.Info("Finished.\n")
 }
 
 func validateInput(name string, available []string) bool {
@@ -60,30 +65,36 @@ func initApp(auth string) http.Handler {
 	services := []string{"7daystodie"}
 	actions := []string{"start", "stop", "restart"}
 
-	router.GET("/service/:name/*action", func(c *gin.Context) {
+	router.GET("/service/:name/:action", func(c *gin.Context) {
+		glog.Info("Received service action request\n")
+
 		providedAuth := c.Query("auth")
 
 		name := c.Param("name")
 		action := c.Param("action")
 
 		if providedAuth == auth && validateInput(name, services) && validateInput(action, actions) {
-			executeCommand(fmt.Sprintf("systemctl %s %s", name, action))
-
-			c.String(http.StatusOK, "Service")
+			executeServiceAction(name, action)
+			c.String(http.StatusOK, fmt.Sprintf("Service action %s on %s successfull", action, name))
+			glog.Info("Action performed\n")
 		} else {
-			c.String(http.StatusUnauthorized, "Incorrect authorization")
+			glog.Infof("Service '%s' Action '%s'\n", name, action)
+			glog.Info("Bad arguments.\n")
+			c.String(http.StatusUnauthorized, "Bad Arguments")
 		}
 	})
 
 	return router
 }
 
-func executeCommand(command string) {
-	cmd := exec.Command("/bin/sh", command)
-
+func executeServiceAction(serviceName string, action string) {
+	cmd, outBuff := exec.Command("/bin/sh", "service-action.sh", action, serviceName), new(strings.Builder)
+	cmd.Stdout = outBuff
 	err := cmd.Run()
 
+	glog.Info(outBuff.String())
+
 	if err != nil {
-		log.Fatal(err)
+		glog.Fatal(err)
 	}
 }
