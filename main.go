@@ -62,7 +62,7 @@ func initApp(auth string) http.Handler {
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
 
-	services := []string{"7daystodie"}
+	services := []string{"7daystodie", "factorio", "minecraft", "minetally"}
 	actions := []string{"start", "stop", "restart"}
 
 	router.GET("/service/:name/:action", func(c *gin.Context) {
