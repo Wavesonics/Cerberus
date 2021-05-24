@@ -74,9 +74,14 @@ func initApp(auth string) http.Handler {
 		action := c.Param("action")
 
 		if providedAuth == auth && validateInput(name, services) && validateInput(action, actions) {
-			executeServiceAction(name, action)
-			c.String(http.StatusOK, fmt.Sprintf("Service action %s on %s successfull", action, name))
-			glog.Info("Action performed\n")
+			success := executeServiceAction(name, action)
+			if success {
+				c.String(http.StatusOK, fmt.Sprintf("Service action %s on %s successfull", action, name))
+				glog.Info("Action performed\n")
+			} else {
+				c.String(http.StatusInternalServerError, fmt.Sprintf("Service action %s on %s FAILED", action, name))
+				glog.Info("Action failed\n")
+			}
 		} else {
 			glog.Infof("Service '%s' Action '%s'\n", name, action)
 			glog.Info("Bad arguments.\n")
@@ -87,14 +92,17 @@ func initApp(auth string) http.Handler {
 	return router
 }
 
-func executeServiceAction(serviceName string, action string) {
+func executeServiceAction(serviceName string, action string) bool {
 	cmd, outBuff := exec.Command("/bin/sh", "service-action.sh", action, serviceName), new(strings.Builder)
 	cmd.Stdout = outBuff
 	err := cmd.Run()
 
-	glog.Info(outBuff.String())
+	glog.Infof("Running command %s on %s\n", action, serviceName)
 
 	if err != nil {
-		glog.Fatal(err)
+		glog.Error(err)
+		return false
+	} else {
+		return true
 	}
 }
