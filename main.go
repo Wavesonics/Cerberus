@@ -96,7 +96,7 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 		action := c.Param("action")
 
 		if providedAuth == auth && validateInput(name, services) && validateInput(action, actions) {
-			success := executeServiceAction(name, action)
+			success := executeServiceAction(name, action, botId, chatId)
 			if success {
 				message := fmt.Sprintf("Service action %s on %s successfull", action, name)
 				c.String(http.StatusOK, message)
@@ -145,13 +145,38 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 			return
 		}
 
-		sendBotMessage("Hey I got your message", botId, chatId)
+		success := false
+
+		// Handle the actual message text
+		switch request.Message.Text {
+		case "/startfactorio@CerberusTheGameServerBot":
+			success = executeServiceAction("factorio", "start", botId, chatId)
+		case "/start7d2d@CerberusTheGameServerBot":
+			success = executeServiceAction("7daystodie", "start", botId, chatId)
+		case "/startminecraft@CerberusTheGameServerBot":
+			success = executeServiceAction("minecraft", "start", botId, chatId)
+		case "/stopfactorio@CerberusTheGameServerBot":
+			success = executeServiceAction("factorio", "stop", botId, chatId)
+		case "/stop7d2d@CerberusTheGameServerBot":
+			success = executeServiceAction("7daystodie", "stop", botId, chatId)
+		case "/stopminecraft@CerberusTheGameServerBot":
+			success = executeServiceAction("minecraft", "stop", botId, chatId)
+		default:
+			success = false
+		}
+
+		if success {
+			c.String(http.StatusOK, "All set!")
+		} else {
+			c.String(http.StatusBadRequest, "Command failed.")
+		}
+
 	})
 
 	return router
 }
 
-func executeServiceAction(serviceName string, action string) bool {
+func executeServiceAction(serviceName string, action string, botId string, chatId int64) bool {
 	cmd, outBuff := exec.Command("/bin/sh", "service-action.sh", action, serviceName), new(strings.Builder)
 	cmd.Stdout = outBuff
 	err := cmd.Run()
@@ -162,6 +187,8 @@ func executeServiceAction(serviceName string, action string) bool {
 		glog.Error(err)
 		return false
 	} else {
+		message := fmt.Sprintf("Service action %s on %s successfull", action, serviceName)
+		sendBotMessage(message, botId, chatId)
 		return true
 	}
 }
