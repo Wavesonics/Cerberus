@@ -199,8 +199,20 @@ func executeServiceAction(serviceName string, action string, botId string, chatI
 		glog.Error(err)
 		return false
 	} else {
-		message := fmt.Sprintf("Service action %s on %s successfull", action, serviceName)
+		var fmtStr string
+
+		switch action {
+		case "start":
+			fmtStr = "I have brought %s to life."
+		case "stop":
+			fmtStr = "I have killed %s."
+		case "restart":
+			fmtStr = "Like a Phoenix %s is reborn."
+		}
+
+		message := fmt.Sprintf(fmtStr, serviceName)
 		sendBotMessage(message, botId, chatId)
+
 		return true
 	}
 }
