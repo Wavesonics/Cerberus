@@ -1,2 +1,6 @@
 # The binary on linux
 Cerberus
+
+# TLS keys
+cerberus-https.key
+cerberus-https.crt

@@ -18,15 +18,15 @@ func main() {
 	var ipAddr string
 	var portNum int
 
-	nullAuth := "null"
-	var auth string
+	const nullArg = "null"
 
-	var botId string
-	var chatId string
+	var auth, botId, chatId, certFile, keyFile string
 
-	flag.StringVar(&auth, "auth", nullAuth, "Authentication password")
-	flag.StringVar(&botId, "botid", nullAuth, "Telegram BotId")
-	flag.StringVar(&chatId, "chatid", nullAuth, "Telegram ChatId")
+	flag.StringVar(&auth, "auth", nullArg, "Authentication password")
+	flag.StringVar(&botId, "botid", nullArg, "Telegram BotId")
+	flag.StringVar(&chatId, "chatid", nullArg, "Telegram ChatId")
+	flag.StringVar(&certFile, "cert", nullArg, "TLS certificate filename")
+	flag.StringVar(&keyFile, "key", nullArg, "TLS key filename")
 
 	flag.StringVar(&ipAddr, "a", "0.0.0.0", "IP address for repository  to listen on")
 	flag.IntVar(&portNum, "p", 8080, "TCP port for repository to listen on")
@@ -35,7 +35,7 @@ func main() {
 	glog.Infof("auth: %s\n", auth)
 	glog.Infof("port: %d\n", portNum)
 
-	if auth == nullAuth {
+	if auth == nullArg {
 		glog.Error("auth not provided")
 		return
 	}
@@ -43,8 +43,17 @@ func main() {
 	serveAddr := net.JoinHostPort(ipAddr, strconv.Itoa(portNum))
 	router := initApp(auth, botId, chatId)
 
-	glog.Info("Listening...\n")
-	http.ListenAndServe(serveAddr, router)
+	var err error
+	if certFile != nullArg && keyFile != nullArg {
+		glog.Infof("Listening on port %d via TLS\n", portNum)
+		err = http.ListenAndServeTLS(serveAddr, certFile, keyFile, router)
+	} else {
+		glog.Infof("Listening on port %d\n", portNum)
+		err = http.ListenAndServe(serveAddr, router)
+	}
+	if err != nil {
+		glog.Fatal(err)
+	}
 
 	glog.Info("Finished.\n")
 }
