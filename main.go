@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
 	ginglog "github.com/szuecs/gin-glog"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os/exec"
@@ -18,13 +20,15 @@ func main() {
 	var ipAddr string
 	var portNum int
 
-	const nullArg = "null"
+	const nullArg = ""
 
-	var auth, botId, chatId, certFile, keyFile string
+	var auth, botId, certFile, keyFile string
+
+	var chatId int64
 
 	flag.StringVar(&auth, "auth", nullArg, "Authentication password")
 	flag.StringVar(&botId, "botid", nullArg, "Telegram BotId")
-	flag.StringVar(&chatId, "chatid", nullArg, "Telegram ChatId")
+	flag.Int64Var(&chatId, "chatid", -1, "Telegram ChatId")
 	flag.StringVar(&certFile, "cert", nullArg, "TLS certificate filename")
 	flag.StringVar(&keyFile, "key", nullArg, "TLS key filename")
 
@@ -71,7 +75,7 @@ func validateInput(name string, available []string) bool {
 	return found
 }
 
-func initApp(auth string, botId string, chatId string) http.Handler {
+func initApp(auth string, botId string, chatId int64) http.Handler {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
@@ -104,6 +108,40 @@ func initApp(auth string, botId string, chatId string) http.Handler {
 			glog.Info("Bad arguments.\n")
 			c.String(http.StatusUnauthorized, "Bad Arguments")
 		}
+	})
+
+	router.GET("/incoming", func(c *gin.Context) {
+		glog.Info("Received incoming Telegram Bot request\n")
+
+		providedAuth := c.Query("auth")
+		if providedAuth != auth {
+			c.String(http.StatusUnauthorized, "Bad Arguments")
+			return
+		}
+
+		jsonData, err := ioutil.ReadAll(c.Request.Body)
+		if err != nil {
+			glog.Error(err)
+			c.String(http.StatusBadRequest, "Bad request body")
+			return
+		}
+
+		request := webhookReqBody{}
+
+		err = json.Unmarshal(jsonData, &request)
+		if err != nil {
+			glog.Error(err)
+			c.String(http.StatusBadRequest, "Failed to decode request body")
+			return
+		}
+
+		if request.Message.Chat.ID != chatId {
+			glog.Warningln("Bot message from incorrect channel: %s", strconv.FormatInt(request.Message.Chat.ID, 10))
+			c.String(http.StatusNotAcceptable, "Message from invalid Chat")
+			return
+		}
+
+		sendBotMessage("Hey I got your message", botId, chatId)
 	})
 
 	return router
