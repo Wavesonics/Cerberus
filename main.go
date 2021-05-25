@@ -147,6 +147,18 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 
 		success := false
 
+		/**
+			Current command list:
+
+		startfactorio - Start the Factorio server
+		startminecraft - Start the Minecraft server
+		start7d2d - Start the 7 Days to Die server
+		stopfactorio - Stop the Factorio server
+		stopminecraft - Stop the Minecraft server
+		stop7d2d - Stop the 7 Days to Die server
+
+		*/
+
 		// Handle the actual message text
 		switch request.Message.Text {
 		case "/startfactorio@CerberusTheGameServerBot":
