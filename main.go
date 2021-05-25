@@ -83,6 +83,10 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 	services := []string{"7daystodie", "factorio", "minecraft", "minetally"}
 	actions := []string{"start", "stop", "restart"}
 
+	router.GET("/test", func(c *gin.Context) {
+		c.String(http.StatusTeapot, "The Teapot is intact")
+	})
+
 	router.GET("/service/:name/:action", func(c *gin.Context) {
 		glog.Info("Received service action request\n")
 
@@ -110,7 +114,7 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 		}
 	})
 
-	router.GET("/incoming", func(c *gin.Context) {
+	router.POST("/incoming", func(c *gin.Context) {
 		glog.Info("Received incoming Telegram Bot request\n")
 
 		providedAuth := c.Query("auth")
