@@ -45,6 +45,13 @@ func SendBotDeleteMessage(body DeleteMessageBody, botId string) {
 	sendJsonRequest(url, body)
 }
 
+func AckCallbackQuery(callbackQuery CallbackQuery, botId string) {
+	answerCallbackBody := AnswerCallbackQueryBody{
+		CallbackQueryId: callbackQuery.Id,
+	}
+	SendBotAnswerCallback(answerCallbackBody, botId)
+}
+
 func sendJsonRequest(url string, requestBody interface{}) bool {
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
