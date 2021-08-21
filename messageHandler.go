@@ -61,6 +61,8 @@ func startCommand(message telegram.Message, botId string, services []string) {
 			CallbackData: callbackData1(service),
 		}
 		keyboardButtons = append(keyboardButtons, keyboardButton)
+
+		glog.Infoln(service)
 	}
 
 	// Send a new message with the keyboard
