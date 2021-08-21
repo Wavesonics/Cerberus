@@ -5,7 +5,7 @@ import (
 	"github.com/golang/glog"
 )
 
-func handleMessage(message telegram.Message, botId string, chatId int64) {
+func handleMessage(message telegram.Message, botId string, chatId int64, services []string) {
 	glog.Infoln("Handling message")
 
 	if message.Chat.ID != chatId {
@@ -41,7 +41,7 @@ func handleMessage(message telegram.Message, botId string, chatId int64) {
 	case "/stopminecraft@CerberusTheGameServerBot":
 		success = executeServiceAction("minecraft", "stop", botId, chatId)
 	case "/command@CerberusTheGameServerBot":
-		startCommand(message, botId)
+		startCommand(message, botId, services)
 		success = true
 	default:
 		success = false
@@ -52,28 +52,23 @@ func handleMessage(message telegram.Message, botId string, chatId int64) {
 	}
 }
 
-func startCommand(message telegram.Message, botId string) {
+func startCommand(message telegram.Message, botId string, services []string) {
+
+	var keyboardButtons = make([]telegram.InlineKeyboardButton, len(services))
+	for _, service := range services {
+		keyboardButton := telegram.InlineKeyboardButton{
+			Text:         service,
+			CallbackData: callbackData1(service),
+		}
+		keyboardButtons = append(keyboardButtons, keyboardButton)
+	}
+
 	// Send a new message with the keyboard
 	sendMessageReq := telegram.SendMessageBody{
 		ChatID: message.Chat.ID,
 		Text:   "Which Game Server?",
 		ReplyMarkup: &telegram.InlineKeyboardMarkup{
-			InlineKeyboard: [][]telegram.InlineKeyboardButton{
-				{
-					telegram.InlineKeyboardButton{
-						Text:         "factorio",
-						CallbackData: callbackData1("factorio"),
-					},
-					telegram.InlineKeyboardButton{
-						Text:         "7daystodie",
-						CallbackData: callbackData1("7daystodie"),
-					},
-					telegram.InlineKeyboardButton{
-						Text:         "minecraft",
-						CallbackData: callbackData1("minecraft"),
-					},
-				},
-			},
+			InlineKeyboard: [][]telegram.InlineKeyboardButton{keyboardButtons},
 		},
 	}
 

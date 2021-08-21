@@ -81,6 +81,7 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
 
+	// Update this array to add services. These must be the exact service names from the systemd
 	services := []string{"7daystodie", "factorio", "minecraft", "eco-server", "armaweb"}
 	actions := []string{"start", "stop", "restart"}
 
@@ -141,7 +142,7 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 		}
 
 		if request.Message != nil {
-			handleMessage(*request.Message, botId, chatId)
+			handleMessage(*request.Message, botId, chatId, services)
 		} else if request.InlineQuery != nil {
 			handleInlineQuery(*request.InlineQuery, botId, chatId)
 		} else if request.CallbackQuery != nil {
