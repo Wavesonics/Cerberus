@@ -81,7 +81,7 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
 
-	services := []string{"7daystodie", "factorio", "minecraft", "minetally"}
+	services := []string{"7daystodie", "factorio", "minecraft", "eco-server", "armaweb"}
 	actions := []string{"start", "stop", "restart"}
 
 	router.GET("/test", func(c *gin.Context) {
