@@ -54,7 +54,7 @@ func handleMessage(message telegram.Message, botId string, chatId int64, service
 
 func startCommand(message telegram.Message, botId string, services []string) {
 
-	var keyboardButtons = make([]telegram.InlineKeyboardButton, len(services))
+	var keyboardButtons []telegram.InlineKeyboardButton
 	for _, service := range services {
 		keyboardButton := telegram.InlineKeyboardButton{
 			Text:         service,
