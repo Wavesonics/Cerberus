@@ -81,8 +81,8 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
 
-	// Update this array to add services. These must be the exact service names from the systemd
-	services := []string{"7daystodie", "factorio", "minecraft", "eco-server", "armaweb"}
+	// Update this array to add gameServices. These must be the exact service names from the systemd
+	gameServices := []string{"7daystodie", "factorio", "minecraft", "eco-server", "armaweb"}
 	actions := []string{"start", "stop", "restart"}
 
 	router.GET("/test", func(c *gin.Context) {
@@ -97,7 +97,7 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 		name := c.Param("name")
 		action := c.Param("action")
 
-		if providedAuth == auth && validateInput(name, services) && validateInput(action, actions) {
+		if providedAuth == auth && validateInput(name, gameServices) && validateInput(action, actions) {
 			success := executeServiceAction(name, action, botId, chatId)
 			if success {
 				message := fmt.Sprintf("Service action %s on %s successfull", action, name)
@@ -142,7 +142,7 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 		}
 
 		if request.Message != nil {
-			handleMessage(*request.Message, botId, chatId, services)
+			handleMessage(*request.Message, botId, chatId, gameServices)
 		} else if request.InlineQuery != nil {
 			handleInlineQuery(*request.InlineQuery, botId, chatId)
 		} else if request.CallbackQuery != nil {
