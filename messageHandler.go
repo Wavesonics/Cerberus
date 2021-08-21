@@ -53,7 +53,6 @@ func handleMessage(message telegram.Message, botId string, chatId int64, service
 }
 
 func startCommand(message telegram.Message, botId string, services []string) {
-
 	var keyboardButtons []telegram.InlineKeyboardButton
 	for _, service := range services {
 		keyboardButton := telegram.InlineKeyboardButton{
@@ -61,11 +60,6 @@ func startCommand(message telegram.Message, botId string, services []string) {
 			CallbackData: callbackData1(service),
 		}
 		keyboardButtons = append(keyboardButtons, keyboardButton)
-	}
-
-	glog.Infoln(len(keyboardButtons))
-	for _, service := range keyboardButtons {
-		glog.Infoln(service.Text)
 	}
 
 	// Send a new message with the keyboard
