@@ -41,7 +41,7 @@ func main() {
 	flag.IntVar(&portNum, "p", 8080, "TCP port for repository to listen on")
 	flag.Parse()
 
-	glog.Infoln("Cerberus bot is starting...")
+	glog.Infoln("Starting cerberus bot...")
 	glog.Infof("auth: %s\n", auth)
 	glog.Infof("port: %d\n", portNum)
 
