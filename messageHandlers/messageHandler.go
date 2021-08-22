@@ -1,11 +1,11 @@
-package main
+package messageHandlers
 
 import (
 	"Cerberus/telegram"
 	"github.com/golang/glog"
 )
 
-func handleMessage(message telegram.Message, botId string, chatId int64, services []string) {
+func HandleMessage(message telegram.Message, botId string, chatId int64, services []string) {
 	glog.Infoln("Handling message")
 
 	if message.Chat.ID != chatId {

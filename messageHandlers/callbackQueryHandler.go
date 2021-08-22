@@ -1,13 +1,14 @@
-package main
+package messageHandlers
 
 import (
+	"Cerberus/serviceControl"
 	"Cerberus/telegram"
 	"fmt"
 	"github.com/golang/glog"
 	"strings"
 )
 
-func handleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, chatId int64) {
+func HandleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, chatId int64) {
 	glog.Infoln("Handling callback query")
 
 	telegram.AckCallbackQuery(callbackQuery, botId)
@@ -44,15 +45,15 @@ func handleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, cha
 					{
 						telegram.InlineKeyboardButton{
 							Text:         "start",
-							CallbackData: callbackData2(service, "start"),
+							CallbackData: CallbackData2(service, "start"),
 						},
 						telegram.InlineKeyboardButton{
 							Text:         "stop",
-							CallbackData: callbackData2(service, "stop"),
+							CallbackData: CallbackData2(service, "stop"),
 						},
 						telegram.InlineKeyboardButton{
 							Text:         "restart",
-							CallbackData: callbackData2(service, "restart"),
+							CallbackData: CallbackData2(service, "restart"),
 						},
 					},
 				},
@@ -72,8 +73,18 @@ func handleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, cha
 		telegram.SendBotDeleteMessage(deleteMessageBody, botId)
 
 		// Actually execute the action finally
-		executeServiceAction(service, action, botId, chatId)
+		serviceControl.ExecuteServiceAction(service, action, botId, chatId)
 	} else {
 		glog.Error("Bad callback sequence, bailing.\n")
 	}
+}
+
+func callbackData1(service string) *string {
+	data := fmt.Sprintf("%d:%s", 1, service)
+	return &data
+}
+
+func CallbackData2(service string, action string) *string {
+	data := fmt.Sprintf("%d:%s:%s", 2, service, action)
+	return &data
 }

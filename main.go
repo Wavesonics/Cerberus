@@ -1,21 +1,14 @@
 package main
 
 import (
-	"Cerberus/github"
-	"Cerberus/telegram"
-	"crypto/hmac"
-	"encoding/json"
+	"Cerberus/routes"
 	"flag"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
 	ginglog "github.com/szuecs/gin-glog"
-	"io/ioutil"
 	"net"
 	"net/http"
-	"os/exec"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -68,21 +61,7 @@ func main() {
 	glog.Info("Finished.\n")
 }
 
-func validateInput(name string, available []string) bool {
-	found := false
-
-	for _, service := range available {
-		if name == service {
-			found = true
-			break
-		}
-	}
-
-	return found
-}
-
 func initApp(auth string, botId string, chatId int64, webhookSecret string) http.Handler {
-	webhookSecretBytes := []byte(webhookSecret)
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
@@ -95,171 +74,11 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 		c.String(http.StatusTeapot, "The Teapot is intact")
 	})
 
-	router.GET("/service/:name/:action", func(c *gin.Context) {
-		glog.Info("Received service action request\n")
+	router.GET("/service/:name/:action", routes.ServiceActionRoute(auth, botId, chatId, gameServices, actions))
 
-		providedAuth := c.Query("auth")
+	router.POST("/incoming", routes.IncomingRoute(auth, botId, chatId, gameServices))
 
-		name := c.Param("name")
-		action := c.Param("action")
-
-		if providedAuth == auth && validateInput(name, gameServices) && validateInput(action, actions) {
-			success := executeServiceAction(name, action, botId, chatId)
-			if success {
-				message := fmt.Sprintf("Service action %s on %s successfull", action, name)
-				c.String(http.StatusOK, message)
-
-				telegram.SendBotMessageSimple(message, botId, chatId)
-				glog.Info("Action performed\n")
-			} else {
-				c.String(http.StatusInternalServerError, fmt.Sprintf("Service action %s on %s FAILED", action, name))
-				glog.Info("Action failed\n")
-			}
-		} else {
-			glog.Infof("Service '%s' Action '%s'\n", name, action)
-			glog.Info("Bad arguments.\n")
-			c.String(http.StatusUnauthorized, "Bad Arguments")
-		}
-	})
-
-	router.POST("/incoming", func(c *gin.Context) {
-		glog.Info("Received incoming Telegram Bot request\n")
-
-		providedAuth := c.Query("auth")
-		if providedAuth != auth {
-			c.String(http.StatusUnauthorized, "Bad Arguments")
-			return
-		}
-
-		jsonData, err := ioutil.ReadAll(c.Request.Body)
-		if err != nil {
-			glog.Error(err)
-			c.String(http.StatusBadRequest, "Bad request body")
-			return
-		}
-
-		request := telegram.WebhookUpdateBody{}
-
-		err = json.Unmarshal(jsonData, &request)
-		if err != nil {
-			glog.Error(err)
-			c.String(http.StatusFailedDependency, "Failed to decode request body")
-			return
-		}
-
-		if request.Message != nil {
-			handleMessage(*request.Message, botId, chatId, gameServices)
-		} else if request.InlineQuery != nil {
-			handleInlineQuery(*request.InlineQuery, botId, chatId)
-		} else if request.CallbackQuery != nil {
-			handleCallbackQuery(*request.CallbackQuery, botId, chatId)
-		} else {
-			glog.Infoln("Unhandled message type. Throwing it away.")
-			glog.Infoln(string(jsonData))
-		}
-
-		c.String(http.StatusOK, "Message consumed")
-	})
-
-	/**
-	Github webhook handler to restart/rebuild cerberus.
-	Github uses an HMAC hex digest to compute the payload hash using the provided secret.
-	The hash is in the header X-Hub-Signature-256
-	 */
-	router.POST("/rebuild", func(c *gin.Context) {
-		// get provided hash
-		providedHash := c.Request.Header.Get("X-Hub-Signature-256")
-
-		if providedHash == "" {
-			c.String(http.StatusForbidden, "Missing signature")
-			return
-		}
-
-		providedHashBytes, hexErr := github.DecodeHex(providedHash)
-		if hexErr != nil {
-			c.String(http.StatusForbidden, "Invalid signature")
-			return
-		}
-
-		// calculate hash from body using secret
-		jsonData, err := ioutil.ReadAll(c.Request.Body)
-		if err != nil {
-			glog.Error(err)
-			c.String(http.StatusBadRequest, "Bad request body")
-			return
-		}
-
-		computedHash := github.ComputeHmac256(jsonData, webhookSecretBytes)
-
-		// compare hashes using a constant time comparer for security
-		if !hmac.Equal(providedHashBytes, computedHash) {
-			glog.Errorln("Webhook signature does not match")
-			c.String(http.StatusForbidden, "Invalid signature")
-			return
-		}
-
-		var payload github.GithubWebhookPayload
-		payloadErr := json.Unmarshal(jsonData, &payload)
-		if payloadErr != nil {
-			glog.Errorln("Error deserializing webhook payload")
-			c.String(http.StatusBadRequest, "Error deserializing webhook payload")
-		}
-
-		// we only want to restart when master is updated
-		if payload.Ref != "refs/heads/master" {
-			return
-		}
-
-		// restart cerberus
-		cmd, outBuff := exec.Command("/bin/sh", "service-action.sh", "restart", "cerberus"), new(strings.Builder)
-		cmd.Stdout = outBuff
-		commandError := cmd.Run()
-		if commandError != nil {
-			c.String(http.StatusInternalServerError, "Unexpected error")
-			return
-		}
-
-		glog.Infoln("New commit pushed. Restarting cerberus...")
-	})
+	router.POST("/rebuild", routes.RebuildRoute(webhookSecret))
 
 	return router
-}
-
-func callbackData1(service string) *string {
-	data := fmt.Sprintf("%d:%s", 1, service)
-	return &data
-}
-
-func callbackData2(service string, action string) *string {
-	data := fmt.Sprintf("%d:%s:%s", 2, service, action)
-	return &data
-}
-
-func executeServiceAction(serviceName string, action string, botId string, chatId int64) bool {
-	cmd, outBuff := exec.Command("/bin/sh", "service-action.sh", action, serviceName), new(strings.Builder)
-	cmd.Stdout = outBuff
-	err := cmd.Run()
-
-	glog.Infof("Running command %s on %s\n", action, serviceName)
-
-	if err != nil {
-		glog.Error(err)
-		return false
-	} else {
-		var fmtStr string
-
-		switch action {
-		case "start":
-			fmtStr = "I have brought %s to life."
-		case "stop":
-			fmtStr = "I have killed %s."
-		case "restart":
-			fmtStr = "Like a Phoenix %s is reborn."
-		}
-
-		message := fmt.Sprintf(fmtStr, serviceName)
-		telegram.SendBotMessageSimple(message, botId, chatId)
-
-		return true
-	}
 }
