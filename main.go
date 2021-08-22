@@ -183,6 +183,8 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 		}
 
 		computedHash := github.ComputeHmac256(jsonData, webhookSecretBytes)
+		glog.Infoln(providedHash)
+		glog.Infoln(computedHash)
 
 		// compare hashes using a constant time comparer for security
 		if subtle.ConstantTimeCompare([]byte(providedHash), []byte(computedHash)) == 0 {
