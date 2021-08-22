@@ -174,7 +174,11 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 			return
 		}
 
-		providedHashBytes := github.DecodeHex(providedHash)
+		providedHashBytes, hexErr := github.DecodeHex(providedHash)
+		if hexErr != nil {
+			c.String(http.StatusForbidden, "Invalid signature")
+			return
+		}
 
 		// calculate hash from body using secret
 		jsonData, err := ioutil.ReadAll(c.Request.Body)
