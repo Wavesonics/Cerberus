@@ -14,6 +14,8 @@ func ComputeHmac256(message []byte, secret []byte) []byte {
 }
 
 func DecodeHex(hexHash string) []byte {
+	// drop the first 7 characters because
+	// github prefixes the hash with sha256=
 	decoded, hexErr := hex.DecodeString(hexHash[7:])
 	if hexErr != nil {
 		glog.Errorln(hexErr)
