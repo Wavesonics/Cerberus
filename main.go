@@ -211,7 +211,10 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 		commandError := cmd.Run()
 		if commandError != nil {
 			c.String(http.StatusInternalServerError, "Unexpected error")
+			return
 		}
+
+		glog.Infoln("New commit pushed. Restarting cerberus...")
 	})
 
 	return router
