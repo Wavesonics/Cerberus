@@ -16,32 +16,23 @@ func handleMessage(message telegram.Message, botId string, chatId int64, service
 	/**
 		Current command list:
 
-	startfactorio - Start the Factorio server
-	startminecraft - Start the Minecraft server
-	start7d2d - Start the 7 Days to Die server
-	stopfactorio - Stop the Factorio server
-	stopminecraft - Stop the Minecraft server
-	stop7d2d - Stop the 7 Days to Die server
+	command - Start a command sequence
+	status - Whats up with cerberus
+	stopall - Stop all running game servers
 	*/
 
 	success := false
 
 	// Handle the actual message text
 	switch message.Text {
-	case "/startfactorio@CerberusTheGameServerBot":
-		success = executeServiceAction("factorio", "start", botId, chatId)
-	case "/start7d2d@CerberusTheGameServerBot":
-		success = executeServiceAction("7daystodie", "start", botId, chatId)
-	case "/startminecraft@CerberusTheGameServerBot":
-		success = executeServiceAction("minecraft", "start", botId, chatId)
-	case "/stopfactorio@CerberusTheGameServerBot":
-		success = executeServiceAction("factorio", "stop", botId, chatId)
-	case "/stop7d2d@CerberusTheGameServerBot":
-		success = executeServiceAction("7daystodie", "stop", botId, chatId)
-	case "/stopminecraft@CerberusTheGameServerBot":
-		success = executeServiceAction("minecraft", "stop", botId, chatId)
 	case "/command@CerberusTheGameServerBot":
 		startCommand(message, botId, services)
+		success = true
+	case "/status@CerberusTheGameServerBot":
+		telegram.SendBotMessageSimple("Status is not yet implemented.", botId, chatId)
+		success = true
+	case "/stopall@CerberusTheGameServerBot":
+		telegram.SendBotMessageSimple("stopall is not yet implemented.", botId, chatId)
 		success = true
 	default:
 		success = false
