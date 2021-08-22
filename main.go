@@ -198,6 +198,7 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 			c.String(http.StatusBadRequest, "Error deserializing webhook payload")
 		}
 
+		// we only want to restart when master is updated
 		if payload.Ref != "refs/heads/master" {
 			return
 		}
