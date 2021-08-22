@@ -183,6 +183,7 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 		}
 
 		computedHash := github.ComputeHmac256(jsonData, webhookSecretBytes)
+		// logging because it's not working
 		glog.Infoln(providedHash)
 		glog.Infoln(computedHash)
 
