@@ -14,8 +14,8 @@ func ComputeHmac256(message []byte, secret []byte) []byte {
 }
 
 func DecodeHex(hexHash string) []byte {
-	// drop the first 7 characters because
-	// github prefixes the hash with sha256=
+	// drop the first 7 characters because github prefixes the hash with sha256=
+	// ideally code should check which hash is being used before stripping the prefix
 	decoded, hexErr := hex.DecodeString(hexHash[7:])
 	if hexErr != nil {
 		glog.Errorln(hexErr)
