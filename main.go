@@ -3,8 +3,7 @@ package main
 import (
 	"Cerberus/github"
 	"Cerberus/telegram"
-	"crypto/subtle"
-	"encoding/hex"
+	"crypto/hmac"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -175,10 +174,7 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 			return
 		}
 
-		providedHashBytes, hashErr := hex.DecodeString(providedHash)
-		if hashErr != nil {
-			c.String(http.StatusForbidden, "Invalid Signature")
-		}
+		providedHashBytes := github.DecodeHex(providedHash)
 
 		// calculate hash from body using secret
 		jsonData, err := ioutil.ReadAll(c.Request.Body)
@@ -189,12 +185,9 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 		}
 
 		computedHash := github.ComputeHmac256(jsonData, webhookSecretBytes)
-		// logging because it's not working testing
-		glog.Infoln(providedHashBytes)
-		glog.Infoln(computedHash)
 
 		// compare hashes using a constant time comparer for security
-		if subtle.ConstantTimeCompare([]byte(providedHashBytes), []byte(computedHash)) == 0 {
+		if !hmac.Equal(providedHashBytes, computedHash) {
 			glog.Errorln("Webhook signature does not match")
 			c.String(http.StatusForbidden, "Invalid signature")
 			return
