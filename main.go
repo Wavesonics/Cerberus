@@ -1,7 +1,9 @@
 package main
 
 import (
+	"Cerberus/github"
 	"Cerberus/telegram"
+	"crypto/subtle"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -24,7 +26,7 @@ func main() {
 	const nullArg = ""
 
 	var auth, botId, certFile, keyFile string
-
+	var webhookSecret string
 	var chatId int64
 
 	flag.StringVar(&auth, "auth", nullArg, "Authentication password")
@@ -32,6 +34,8 @@ func main() {
 	flag.Int64Var(&chatId, "chatid", -1, "Telegram ChatId")
 	flag.StringVar(&certFile, "cert", nullArg, "TLS certificate filename")
 	flag.StringVar(&keyFile, "key", nullArg, "TLS key filename")
+
+	flag.StringVar(&webhookSecret, "secret", nullArg, "Webhook secret")
 
 	flag.StringVar(&ipAddr, "a", "0.0.0.0", "IP address for repository  to listen on")
 	flag.IntVar(&portNum, "p", 8080, "TCP port for repository to listen on")
@@ -46,7 +50,7 @@ func main() {
 	}
 
 	serveAddr := net.JoinHostPort(ipAddr, strconv.Itoa(portNum))
-	router := initApp(auth, botId, chatId)
+	router := initApp(auth, botId, chatId, webhookSecret)
 
 	var err error
 	if certFile != nullArg && keyFile != nullArg {
@@ -76,7 +80,8 @@ func validateInput(name string, available []string) bool {
 	return found
 }
 
-func initApp(auth string, botId string, chatId int64) http.Handler {
+func initApp(auth string, botId string, chatId int64, webhookSecret string) http.Handler {
+	webhookSecretBytes := []byte(webhookSecret)
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
@@ -153,6 +158,57 @@ func initApp(auth string, botId string, chatId int64) http.Handler {
 		}
 
 		c.String(http.StatusOK, "Message consumed")
+	})
+
+	/**
+	Github webhook handler to restart/rebuild cerberus.
+	Github uses an HMAC hex digest to compute the payload hash using the provided secret.
+	The hash is in the header X-Hub-Signature-256
+	 */
+	router.POST("/rebuild", func(c *gin.Context) {
+		// get provided hash
+		providedHash := c.Request.Header.Get("X-Hub-Signature-256")
+
+		if providedHash == "" {
+			c.String(http.StatusForbidden, "Missing signature")
+			return
+		}
+
+		// calculate hash from body using secret
+		jsonData, err := ioutil.ReadAll(c.Request.Body)
+		if err != nil {
+			glog.Error(err)
+			c.String(http.StatusBadRequest, "Bad request body")
+			return
+		}
+
+		computedHash := github.ComputeHmac256(jsonData, webhookSecretBytes)
+
+		// compare hashes using a constant time comparer for security
+		if subtle.ConstantTimeCompare([]byte(providedHash), []byte(computedHash)) == 0 {
+			glog.Errorln("Webhook signature does not match")
+			c.String(http.StatusForbidden, "Invalid signature")
+			return
+		}
+
+		var payload github.GithubWebhookPayload
+		payloadErr := json.Unmarshal(jsonData, &payload)
+		if payloadErr != nil {
+			glog.Errorln("Error deserializing webhook payload")
+			c.String(http.StatusBadRequest, "Error deserializing webhook payload")
+		}
+
+		if payload.Ref != "refs/heads/master" {
+			return
+		}
+
+		// restart cerberus
+		cmd, outBuff := exec.Command("/bin/sh", "service-action.sh", "restart", "cerberus"), new(strings.Builder)
+		cmd.Stdout = outBuff
+		commandError := cmd.Run()
+		if commandError != nil {
+			c.String(http.StatusInternalServerError, "Unexpected error")
+		}
 	})
 
 	return router

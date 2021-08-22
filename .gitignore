@@ -4,3 +4,4 @@ Cerberus
 # TLS keys
 cerberus-https.key
 cerberus-https.crt
+.idea
