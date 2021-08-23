@@ -8,7 +8,7 @@ import (
 )
 
 func HandleMessage(message telegram.Message, botId string, chatId int64, services config.ServiceConfig) {
-	glog.Infoln("Handling message")
+	glog.Infof("Handling message: %s", message.Text)
 
 	if message.Chat.ID != chatId {
 		glog.Warningf("Bot message from incorrect channel: %d Must be from: %d\n", message.Chat.ID, chatId)
