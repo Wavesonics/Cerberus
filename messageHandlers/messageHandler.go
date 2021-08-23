@@ -23,24 +23,15 @@ func HandleMessage(message telegram.Message, botId string, chatId int64, service
 	stopall - Stop all running game servers
 	*/
 
-	success := false
-
 	// Handle the actual message text
 	switch message.Text {
 	case "/command@CerberusTheGameServerBot":
 		startCommand(message, botId, services)
-		success = true
 	case "/status@CerberusTheGameServerBot":
 		telegram.SendBotMessageSimple("Status is not yet implemented.", botId, chatId)
-		success = true
 	case "/stopall@CerberusTheGameServerBot":
 		stopAll(botId, chatId, services)
-		success = true
 	default:
-		success = false
-	}
-
-	if !success {
 		telegram.SendBotMessageSimple("I don't know what you mean...", botId, chatId)
 	}
 }
