@@ -73,12 +73,35 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 	maxLength := 0
 
 	for _, service := range config.Services {
-		out, err := exec.Command(fmt.Sprintf(`systemctl status %s | grep -Po "(?<=Active: )\w+"`, service.Service)).Output()
+		//statusCmd := exec.Command("systemctl", "status", service.Service)
+		//grepCmd := exec.Command("grep", "-Po", `"(?<=Active: )\w+"`)
+		////r, w := io.Pipe()
+		////statusCmd.Stdout = w
+		////grepCmd.Stdin = r
+		//statusOut, err1 := statusCmd.StdoutPipe()
+		//logError("status cmd: ", err1)
+		//grepCmd.Stdin = statusOut
+		//grepout, err2 := grepCmd.StdoutPipe()
+		//logError("grep cmd: ", err2)
+		//
+		//if err := statusCmd.Start(); err != nil {
+		//	logError("status cmd start: ", err)
+		//}
+		//if err := grepCmd.Start(); err != nil {
+		//	logError("grep cmd start: ", err)
+		//}
+		//if err := statusCmd.Wait(); err != nil {
+		//	logError("status cmd wait: ", err)
+		//}
+		//cmdResult, _ := io.ReadAll(grepout)
+		//if err := grepCmd.Wait(); err != nil {
+		//	logError("grep cmd wait: ", err)
+		//}
+		//
+		//out := string(cmdResult)
 
-		if err != nil {
-			glog.Errorf("Failed to get status for service %s\n", service.Service)
-			glog.Errorln(err)
-		}
+		out, err := exec.Command("bash", "-c", fmt.Sprintf(`systemctl status %s | grep -Po "(?<=Active: )\w+"`, service.Service)).Output()
+		logError("bash cmd: ", err)
 
 		serviceStatus := string(out)
 
@@ -90,6 +113,12 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 
 	result := generateTable(maxLength, config, resultMap)
 	telegram.SendBotMessageSimple(result, botId, chatId)
+}
+
+func logError(message string, err error) {
+	if err != nil {
+		glog.Errorln(message, err)
+	}
 }
 
 func generateTable(maxLength int, config config.ServiceConfig, resultMap map[string]string) string {
