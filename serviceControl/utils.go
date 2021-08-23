@@ -25,7 +25,7 @@ func (action ServiceAction) String() string {
 }
 
 func ActionFromString(actionName string) (ServiceAction, error) {
-	var action ServiceAction = Invalid
+	var action = Invalid
 
 	for ii, validAction := range validActions {
 		if actionName == validAction {
