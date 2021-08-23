@@ -2,6 +2,7 @@ package main
 
 import (
 	"Cerberus/routes"
+	"Cerberus/telegram"
 	"flag"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
@@ -47,6 +48,7 @@ func main() {
 	router := initApp(auth, botId, chatId, webhookSecret)
 
 	var err error
+	telegram.SendBotMessageSimple("Starting Cerberus Bot", botId, chatId)
 	if certFile != nullArg && keyFile != nullArg {
 		glog.Infof("Listening on port %d via TLS\n", portNum)
 		err = http.ListenAndServeTLS(serveAddr, certFile, keyFile, router)
