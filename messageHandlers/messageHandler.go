@@ -78,7 +78,7 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 
 		serviceStatus := string(out)
 
-		resultMap[service.Service] = serviceStatus
+		resultMap[service.Service] = strings.TrimSpace(serviceStatus)
 		if maxLength < len(service.Name) {
 			maxLength = len(service.Name)
 		}
@@ -101,10 +101,10 @@ func logError(message string, err error) {
 func generateTable(maxLength int, config config.ServiceConfig, resultMap map[string]string) string {
 	builder := strings.Builder{}
 	builder.WriteString("```\n")
-	fmtString := fmt.Sprintf("%%-%ds: %%s\n", maxLength)
+	fmtString := fmt.Sprintf("%%-%ds : %%s\n", maxLength)
 	for _, service := range config.Services {
 		builder.WriteString(fmt.Sprintf(fmtString, service.Name, resultMap[service.Service]))
 	}
-	builder.WriteString("```\n")
+	builder.WriteString("```")
 	return builder.String()
 }
