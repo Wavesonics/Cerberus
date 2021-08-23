@@ -62,5 +62,5 @@ func stopAll(botId string, chatId int64, services config.ServiceConfig) {
 	for _, service := range services.Service {
 		serviceControl.ExecuteServiceAction(service.Service, serviceControl.Stop, botId, chatId)
 	}
-	telegram.SendBotMessageSimple("They have been killed...", botId, chatId)
+	telegram.SendBotMessageSimple("They have all been killed...", botId, chatId)
 }
