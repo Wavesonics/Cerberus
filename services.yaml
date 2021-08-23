@@ -1,4 +1,4 @@
-servie:
+service:
   - name: Factorio
     service: factorio
     ports: 8555
