@@ -90,13 +90,12 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 	router.Use(ginglog.Logger(3 * time.Second))
 
 	gameServices := loadServicesConfig()
-	actions := []string{"start", "stop", "restart"}
 
 	router.GET("/test", func(c *gin.Context) {
 		c.String(http.StatusTeapot, "The Teapot is intact")
 	})
 
-	router.GET("/service/:name/:action", routes.ServiceActionRoute(auth, botId, chatId, gameServices, actions))
+	router.GET("/service/:name/:action", routes.ServiceActionRoute(auth, botId, chatId, gameServices))
 
 	router.POST("/incoming", routes.IncomingRoute(auth, botId, chatId, gameServices))
 
