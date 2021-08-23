@@ -1,7 +1,7 @@
 package config
 
 type ServiceConfig struct {
-	Service []struct {
+	Services []struct {
 		// Human friendly display name
 		Name string `yaml:"name"`
 		// The literal systemd service name

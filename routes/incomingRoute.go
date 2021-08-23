@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func IncomingRoute(auth string, botId string, chatId int64, gameServices config.ServiceConfig) gin.HandlerFunc {
+func IncomingRoute(auth string, botId string, chatId int64, gameServiceConfig config.ServiceConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		glog.Info("Received incoming Telegram Bot request\n")
 
@@ -38,7 +38,7 @@ func IncomingRoute(auth string, botId string, chatId int64, gameServices config.
 		}
 
 		if request.Message != nil {
-			messageHandlers.HandleMessage(*request.Message, botId, chatId, gameServices)
+			messageHandlers.HandleMessage(*request.Message, botId, chatId, gameServiceConfig)
 		} else if request.InlineQuery != nil {
 			messageHandlers.HandleInlineQuery(*request.InlineQuery, botId, chatId)
 		} else if request.CallbackQuery != nil {

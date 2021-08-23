@@ -47,7 +47,7 @@ func ServiceActionRoute(auth string, botId string, chatId int64, gameServices co
 func validateService(name string, services config.ServiceConfig) bool {
 	found := false
 
-	for _, service := range services.Service {
+	for _, service := range services.Services {
 		if name == service.Name {
 			found = true
 			break
