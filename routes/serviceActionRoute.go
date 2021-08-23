@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"Cerberus/config"
 	"Cerberus/serviceControl"
 	"Cerberus/telegram"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 	"net/http"
 )
 
-func ServiceActionRoute(auth string, botId string, chatId int64, gameServices []string, actions []string) func(c *gin.Context) {
+func ServiceActionRoute(auth string, botId string, chatId int64, gameServices config.ServiceConfig, actions []string) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		glog.Info("Received service action request\n")
 
@@ -18,7 +19,7 @@ func ServiceActionRoute(auth string, botId string, chatId int64, gameServices []
 		name := c.Param("name")
 		action := c.Param("action")
 
-		if providedAuth == auth && validateInput(name, gameServices) && validateInput(action, actions) {
+		if providedAuth == auth && validateService(name, gameServices) && validateInput(action, actions) {
 			success := serviceControl.ExecuteServiceAction(name, action, botId, chatId)
 			if success {
 				message := fmt.Sprintf("Service action %s on %s successfull", action, name)
@@ -38,6 +39,18 @@ func ServiceActionRoute(auth string, botId string, chatId int64, gameServices []
 	}
 }
 
+func validateService(name string, services config.ServiceConfig) bool {
+	found := false
+
+	for _, service := range services.Service {
+		if name == service.Name {
+			found = true
+			break
+		}
+	}
+
+	return found
+}
 
 func validateInput(name string, available []string) bool {
 	found := false

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"Cerberus/config"
 	"Cerberus/messageHandlers"
 	"Cerberus/telegram"
 	"encoding/json"
@@ -10,7 +11,7 @@ import (
 	"net/http"
 )
 
-func IncomingRoute(auth string, botId string, chatId int64, gameServices []string) gin.HandlerFunc {
+func IncomingRoute(auth string, botId string, chatId int64, gameServices config.ServiceConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		glog.Info("Received incoming Telegram Bot request\n")
 

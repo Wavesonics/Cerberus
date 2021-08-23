@@ -10,4 +10,5 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/szuecs/gin-glog v1.1.1
 	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

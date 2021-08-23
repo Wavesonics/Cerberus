@@ -1,11 +1,12 @@
 package messageHandlers
 
 import (
+	"Cerberus/config"
 	"Cerberus/telegram"
 	"github.com/golang/glog"
 )
 
-func HandleMessage(message telegram.Message, botId string, chatId int64, services []string) {
+func HandleMessage(message telegram.Message, botId string, chatId int64, services config.ServiceConfig) {
 	glog.Infoln("Handling message")
 
 	if message.Chat.ID != chatId {
@@ -43,12 +44,12 @@ func HandleMessage(message telegram.Message, botId string, chatId int64, service
 	}
 }
 
-func startCommand(message telegram.Message, botId string, services []string) {
+func startCommand(message telegram.Message, botId string, services config.ServiceConfig) {
 	var keyboardButtons []telegram.InlineKeyboardButton
-	for _, service := range services {
+	for _, service := range services.Service {
 		keyboardButton := telegram.InlineKeyboardButton{
-			Text:         service,
-			CallbackData: callbackData1(service),
+			Text:         service.Name,
+			CallbackData: callbackData1(service.Service),
 		}
 		keyboardButtons = append(keyboardButtons, keyboardButton)
 	}

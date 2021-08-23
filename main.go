@@ -1,12 +1,16 @@
 package main
 
 import (
+	"Cerberus/config"
 	"Cerberus/routes"
 	"Cerberus/telegram"
 	"flag"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
 	ginglog "github.com/szuecs/gin-glog"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
@@ -64,13 +68,28 @@ func main() {
 	glog.Info("Finished.\n")
 }
 
+func loadServicesConfig() config.ServiceConfig {
+	data, err := ioutil.ReadFile("services.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gameServices := config.ServiceConfig{}
+
+	err = yaml.Unmarshal(data, &gameServices)
+	if err != nil {
+		log.Fatalf("error loading services.yaml: %v", err)
+	}
+
+	return gameServices
+}
+
 func initApp(auth string, botId string, chatId int64, webhookSecret string) http.Handler {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(ginglog.Logger(3 * time.Second))
 
-	// Update this array to add gameServices. These must be the exact service names from the systemd
-	gameServices := []string{"7daystodie", "factorio", "minecraft", "eco-server", "armaweb"}
+	gameServices := loadServicesConfig()
 	actions := []string{"start", "stop", "restart"}
 
 	router.GET("/test", func(c *gin.Context) {
