@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/glog"
 	ginglog "github.com/szuecs/gin-glog"
+	"math/rand"
 	"net"
 	"net/http"
 	"strconv"
@@ -48,7 +49,7 @@ func main() {
 	router := initApp(auth, botId, chatId, webhookSecret)
 
 	var err error
-	telegram.SendBotMessageSimple("Starting Cerberus Bot", botId, chatId)
+	postWakeupMessage(botId, chatId)
 	if certFile != nullArg && keyFile != nullArg {
 		glog.Infof("Listening on port %d via TLS\n", portNum)
 		err = http.ListenAndServeTLS(serveAddr, certFile, keyFile, router)
@@ -83,4 +84,15 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 	router.POST("/rebuild", routes.RebuildRoute(webhookSecret))
 
 	return router
+}
+
+var wakeupMessages = []string{
+	"I have awakened!",
+	"I have been summoned yet again.",
+	"I am here to guard the gates.",
+}
+
+func postWakeupMessage(botId string, chatId int64) {
+	index := rand.Intn(len(wakeupMessages))
+	telegram.SendBotMessageSimple(wakeupMessages[index], botId, chatId)
 }
