@@ -112,6 +112,7 @@ var wakeupMessages = []string{
 }
 
 func postWakeupMessage(botId string, chatId int64) {
+	rand.Seed(time.Now().UTC().UnixNano())
 	index := rand.Intn(len(wakeupMessages))
 	telegram.SendBotMessageSimple(wakeupMessages[index], botId, chatId)
 }
