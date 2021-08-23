@@ -2,6 +2,7 @@ package messageHandlers
 
 import (
 	"Cerberus/config"
+	"Cerberus/serviceControl"
 	"Cerberus/telegram"
 	"github.com/golang/glog"
 )
@@ -33,7 +34,7 @@ func HandleMessage(message telegram.Message, botId string, chatId int64, service
 		telegram.SendBotMessageSimple("Status is not yet implemented.", botId, chatId)
 		success = true
 	case "/stopall@CerberusTheGameServerBot":
-		telegram.SendBotMessageSimple("stopall is not yet implemented.", botId, chatId)
+		stopAll(botId, chatId, services)
 		success = true
 	default:
 		success = false
@@ -64,4 +65,10 @@ func startCommand(message telegram.Message, botId string, services config.Servic
 	}
 
 	telegram.SendBotMessage(sendMessageReq, botId)
+}
+
+func stopAll(botId string, chatId int64, services config.ServiceConfig) {
+	for _, service := range services.Service {
+		serviceControl.ExecuteServiceAction(service.Service, serviceControl.Stop, botId, chatId)
+	}
 }

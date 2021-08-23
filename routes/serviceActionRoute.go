@@ -10,16 +10,21 @@ import (
 	"net/http"
 )
 
-func ServiceActionRoute(auth string, botId string, chatId int64, gameServices config.ServiceConfig, actions []string) func(c *gin.Context) {
+func ServiceActionRoute(auth string, botId string, chatId int64, gameServices config.ServiceConfig) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		glog.Info("Received service action request\n")
 
 		providedAuth := c.Query("auth")
 
 		name := c.Param("name")
-		action := c.Param("action")
+		actionName := c.Param("action")
+		action, err := serviceControl.ActionFromString(actionName)
+		if err != nil {
+			glog.Error("Bad Service Action, bailing.\n")
+			return
+		}
 
-		if providedAuth == auth && validateService(name, gameServices) && validateInput(action, actions) {
+		if providedAuth == auth && validateService(name, gameServices) {
 			success := serviceControl.ExecuteServiceAction(name, action, botId, chatId)
 			if success {
 				message := fmt.Sprintf("Service action %s on %s successfull", action, name)
@@ -44,19 +49,6 @@ func validateService(name string, services config.ServiceConfig) bool {
 
 	for _, service := range services.Service {
 		if name == service.Name {
-			found = true
-			break
-		}
-	}
-
-	return found
-}
-
-func validateInput(name string, available []string) bool {
-	found := false
-
-	for _, service := range available {
-		if name == service {
 			found = true
 			break
 		}

@@ -63,7 +63,13 @@ func HandleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, cha
 		telegram.SendBotEditMessageText(sendMessageReq, botId)
 	} else if parts[0] == "2" {
 		service := parts[1]
-		action := parts[2]
+		actionName := parts[2]
+
+		action, err := serviceControl.ActionFromString(actionName)
+		if err != nil {
+			glog.Error("Bad Service Action, bailing.\n")
+			return
+		}
 
 		// Delete the callback message
 		deleteMessageBody := telegram.DeleteMessageBody{
