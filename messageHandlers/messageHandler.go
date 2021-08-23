@@ -77,6 +77,7 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 
 		if err != nil {
 			glog.Errorf("Failed to get status for service %s\n", service.Service)
+			glog.Errorln(err)
 		}
 
 		serviceStatus := string(out)
