@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/golang/glog"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -84,10 +85,15 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 		}
 	}
 
-	result := generateTable(maxLength, config, resultMap)
+	memOut, err := exec.Command("bash", "-c", `free | grep -Po "(?<=Mem:)(\s+\d+){2}"`).Output()
+	logError("Get memory", err)
+	memOutString := strings.TrimSpace(string(memOut))
+	memUsage := calcMemUsageFromFreeCommand(memOutString)
+
+	result := generateTable(maxLength, config, resultMap, memUsage)
 	telegram.SendBotMessage(telegram.SendMessageBody{
-		ChatID: chatId,
-		Text: result,
+		ChatID:    chatId,
+		Text:      result,
 		ParseMode: "MarkdownV2",
 	}, botId)
 }
@@ -98,13 +104,30 @@ func logError(message string, err error) {
 	}
 }
 
-func generateTable(maxLength int, config config.ServiceConfig, resultMap map[string]string) string {
+func generateTable(maxLength int,
+	config config.ServiceConfig,
+	resultMap map[string]string,
+	memoryUsage int,
+) string {
+	fmtString := fmt.Sprintf("%%-%ds : %%s\n", maxLength)
 	builder := strings.Builder{}
 	builder.WriteString("```\n")
-	fmtString := fmt.Sprintf("%%-%ds : %%s\n", maxLength)
+
+	builder.WriteString(fmt.Sprintf(fmtString, "Memory", fmt.Sprintf("%02d%%", memoryUsage)))
+	builder.WriteString("\n")
+
 	for _, service := range config.Services {
 		builder.WriteString(fmt.Sprintf(fmtString, service.Name, resultMap[service.Service]))
 	}
 	builder.WriteString("```")
 	return builder.String()
+}
+
+func calcMemUsageFromFreeCommand(memOutString string) int {
+	parts := strings.Fields(memOutString)
+	totalMem, _ := strconv.ParseFloat(parts[0], 32)
+	usedMem, _ := strconv.ParseFloat(parts[1], 32)
+
+	memUsage := int(usedMem / (totalMem + 1.0) * 100)
+	return memUsage
 }

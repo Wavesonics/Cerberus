@@ -14,12 +14,12 @@ func HandleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, cha
 	telegram.AckCallbackQuery(callbackQuery, botId)
 
 	if callbackQuery.Message == nil || callbackQuery.Message.Chat.ID != chatId {
-		glog.Warningln("Bot message from incorrect channel\n")
+		glog.Warningln("Bot message from incorrect channel")
 		return
 	}
 
 	if callbackQuery.Data == nil {
-		glog.Warningln("No data, dropping callback query\n")
+		glog.Warningln("No data, dropping callback query")
 		return
 	} else {
 		glog.Infof("Data: %s\n", *callbackQuery.Data)
