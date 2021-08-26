@@ -2,6 +2,7 @@ package messageHandlers
 
 import (
 	"Cerberus/config"
+	"fmt"
 	"testing"
 )
 
@@ -36,22 +37,32 @@ func Test_generateTable(t *testing.T) {
 
 	maxLength := len("Factorio")
 
-	result := generateTable(maxLength, conf, resultMap, 1)
+	result := generateTable(maxLength, conf, resultMap, "01%", "1%")
 	println(result)
 }
 
 func Test_calcMemoryUsage(t *testing.T) {
 	cmdParsed := "       16317324      546392"
 	result := calcMemUsageFromFreeCommand(cmdParsed)
-	expected := (546392.0/16317324.0) * 100
+	expected := fmt.Sprintf("%03.1f%%", (546392.0/16317324.0) * 100)
 
-	if result != int(expected) {
-		t.Errorf("Expected %d to equal %d", result, int(expected))
+	if result != expected {
+		t.Errorf("Expected %s to equal %s", result, expected)
 	}
 
 	result = calcMemUsageFromFreeCommand(" 0 0")
 
-	if result != 0 {
-		t.Errorf("Expected %d to equal %d", result, 0)
+	if result != "0.0%" {
+		t.Errorf("Expected %s to equal %s", result, "0.0%")
+	}
+}
+
+func Test_calcCpuUsage(t *testing.T) {
+	cmdParsed := "77.12"
+	result := calcCpuUsageFromMpstatCommand(cmdParsed)
+	expected := fmt.Sprintf("%03.1f%%", 22.88)
+
+	if result != expected {
+		t.Errorf("Expected %s to equal %s", result, expected)
 	}
 }

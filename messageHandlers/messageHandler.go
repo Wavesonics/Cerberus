@@ -90,7 +90,12 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 	memOutString := strings.TrimSpace(string(memOut))
 	memUsage := calcMemUsageFromFreeCommand(memOutString)
 
-	result := generateTable(maxLength, config, resultMap, memUsage)
+	cpuOut, cpuErr := exec.Command("bash", "-c", "mpstat | grep all").Output()
+	logError("Get CPU", cpuErr)
+	cpuOutString := strings.TrimSpace(string(cpuOut))
+	cpuUsage := calcCpuUsageFromMpstatCommand(cpuOutString)
+
+	result := generateTable(maxLength, config, resultMap, memUsage, cpuUsage)
 	telegram.SendBotMessage(telegram.SendMessageBody{
 		ChatID:    chatId,
 		Text:      result,
@@ -107,13 +112,16 @@ func logError(message string, err error) {
 func generateTable(maxLength int,
 	config config.ServiceConfig,
 	resultMap map[string]string,
-	memoryUsage int,
+	memoryUsage string,
+	cpuUsage string,
 ) string {
 	fmtString := fmt.Sprintf("%%-%ds : %%s\n", maxLength)
 	builder := strings.Builder{}
 	builder.WriteString("```\n")
 
-	builder.WriteString(fmt.Sprintf(fmtString, "Memory", fmt.Sprintf("%02d%%", memoryUsage)))
+	builder.WriteString(fmt.Sprintf(fmtString, "Memory", memoryUsage))
+
+	builder.WriteString(fmt.Sprintf(fmtString, "CPU", cpuUsage))
 	builder.WriteString("\n")
 
 	for _, service := range config.Services {
@@ -123,11 +131,18 @@ func generateTable(maxLength int,
 	return builder.String()
 }
 
-func calcMemUsageFromFreeCommand(memOutString string) int {
+func calcMemUsageFromFreeCommand(memOutString string) string {
 	parts := strings.Fields(memOutString)
 	totalMem, _ := strconv.ParseFloat(parts[0], 32)
 	usedMem, _ := strconv.ParseFloat(parts[1], 32)
 
-	memUsage := int(usedMem / (totalMem + 1.0) * 100)
-	return memUsage
+	memoryUsage := usedMem / (totalMem + 1.0) * 100
+	return fmt.Sprintf("%03.1f%%", memoryUsage)
+}
+
+func calcCpuUsageFromMpstatCommand(cpuOutString string) string {
+	parts := strings.Fields(cpuOutString)
+	idle, _ := strconv.ParseFloat(parts[len(parts)-1], 64)
+	usage := 100 - idle
+	return fmt.Sprintf("%03.1f%%", usage)
 }
