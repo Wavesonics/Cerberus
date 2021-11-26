@@ -15,5 +15,5 @@ services:
     service: eco-server
     ports: 8200 8201 8202
   - name: Barotrauma
-    services: barotrauma
+    service: barotrauma
     ports: TCP 8850-8851
