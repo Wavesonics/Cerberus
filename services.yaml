@@ -10,7 +10,10 @@ services:
     ports: TCP 8080-8081 8082 26900 UDP 26900-26902
   - name: Arma
     service: armaweb
-    ports: ???
+    ports: TCP 8900
   - name: Eco
     service: eco-server
     ports: 8200 8201 8202
+  - name: Barotrauma
+    services: barotrauma
+    ports: TCP 8850-8851
