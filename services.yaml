@@ -17,3 +17,7 @@ services:
   - name: Barotrauma
     service: barotrauma
     ports: TCP 8850-8851
+  - name: Valheim
+    service: valheim
+    ports: TCP 8123
+    
