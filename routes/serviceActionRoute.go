@@ -14,7 +14,7 @@ func ServiceActionRoute(auth string, botId string, chatId int64, gameServices co
 	return func(c *gin.Context) {
 		glog.Info("Received service action request\n")
 
-		providedAuth := c.Query("auth")
+		providedAuth := c.GetHeader("X-Telegram-Bot-Api-Secret-Token")
 
 		name := c.Param("name")
 		actionName := c.Param("action")

@@ -3,7 +3,7 @@ services:
     service: factorio
     ports: 8555
   - name: Minecraft
-    service: minecraft
+    service: minecraftbe
     ports: 8969 8969
   - name: 7 Days to Die
     service: 7daystodie

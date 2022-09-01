@@ -13,11 +13,12 @@ import (
 
 func IncomingRoute(auth string, botId string, chatId int64, gameServiceConfig config.ServiceConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		glog.Info("Received incoming Telegram Bot request\n")
+		glog.Infoln("Received incoming Telegram Bot request")
 
-		providedAuth := c.Query("auth")
+		providedAuth := c.GetHeader("X-Telegram-Bot-Api-Secret-Token")
 		if providedAuth != auth {
-			c.String(http.StatusUnauthorized, "Bad Arguments")
+			glog.Infof("Provided auth (%s) did my match (%s)\n", providedAuth, auth)
+			c.String(http.StatusUnauthorized, "Not Authorized")
 			return
 		}
 
