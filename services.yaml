@@ -20,4 +20,7 @@ services:
   - name: Valheim
     service: valheim
     ports: TCP 8123
+  - name: Core Keeper
+    service: corekeeper
+    ports: TCP 8234
     
