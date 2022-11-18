@@ -4,7 +4,7 @@ services:
     ports: 8555
   - name: Minecraft
     service: minecraftbe
-    ports: 8969 8969
+    ports: BOTH 8969
   - name: 7 Days to Die
     service: 7daystodie
     ports: TCP 8082 8083 26900 UDP 26900-26902
