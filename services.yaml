@@ -23,4 +23,6 @@ services:
   - name: Core Keeper
     service: corekeeper
     ports: TCP 8234
-    
+  - name: Foundry VTT
+    service: foundry
+    ports: TCP 8120
