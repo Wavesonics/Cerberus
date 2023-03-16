@@ -130,13 +130,13 @@ func generateTable(maxLength int,
 	memoryUsage string,
 	cpuUsage string,
 ) string {
-	fmtString := fmt.Sprintf("%%-%ds : %%s\n", maxLength)
+	fmtString := fmt.Sprintf("**%%-%ds** : %%s\n", maxLength)
 	builder := strings.Builder{}
 	builder.WriteString("```\n")
 
-	builder.WriteString(fmt.Sprintf(fmtString, "🧠 Memory", memoryUsage))
+	builder.WriteString(fmt.Sprintf(fmtString, "🧠 **Memory**", memoryUsage))
 
-	builder.WriteString(fmt.Sprintf(fmtString, "💻 CPU", cpuUsage))
+	builder.WriteString(fmt.Sprintf(fmtString, "💻 **CPU**", cpuUsage))
 	builder.WriteString("\n")
 
 	for _, service := range config.Services {
@@ -146,6 +146,8 @@ func generateTable(maxLength int,
 			result = "▶️ " + result
 		} else if result == "inactive" {
 			result = "🛑 " + result
+		} else if result == "failed" {
+			result = "😵 " + result
 		} else {
 			result = "🤔 " + result
 		}
