@@ -36,7 +36,7 @@ func HandleMessage(message telegram.Message, botId string, chatId int64, config 
 	case "/stopall@CerberusTheGameServerBot":
 		stopAll(botId, chatId, config)
 	default:
-		telegram.SendBotMessageSimple("I don't know what you mean...", botId, chatId)
+		telegram.SendBotMessageSimple("🤷 I don't know what you mean...", botId, chatId)
 	}
 }
 
@@ -45,7 +45,6 @@ func startCommand(message telegram.Message, botId string, config config.ServiceC
 	var keyboardButtons [][]telegram.InlineKeyboardButton
 	var buttonRow []telegram.InlineKeyboardButton = nil
 	for ii, service := range config.Services {
-
 		if ii%numColumns == 0 {
 			if buttonRow != nil {
 				keyboardButtons = append(keyboardButtons, buttonRow)
@@ -69,7 +68,7 @@ func startCommand(message telegram.Message, botId string, config config.ServiceC
 	// Send a new message with the keyboard
 	sendMessageReq := telegram.SendMessageBody{
 		ChatID: message.Chat.ID,
-		Text:   "Which Game Server?",
+		Text:   "🎮 Which Game Server❓",
 		ReplyMarkup: &telegram.InlineKeyboardMarkup{
 			InlineKeyboard: keyboardButtons,
 		},
@@ -82,7 +81,7 @@ func stopAll(botId string, chatId int64, config config.ServiceConfig) {
 	for _, service := range config.Services {
 		serviceControl.ExecuteServiceAction(service.Service, serviceControl.Stop, botId, chatId)
 	}
-	telegram.SendBotMessageSimple("They have all been killed...", botId, chatId)
+	telegram.SendBotMessageSimple("💀 They have all been killed...", botId, chatId)
 }
 
 func status(botId string, chatId int64, config config.ServiceConfig) {
@@ -135,13 +134,23 @@ func generateTable(maxLength int,
 	builder := strings.Builder{}
 	builder.WriteString("```\n")
 
-	builder.WriteString(fmt.Sprintf(fmtString, "Memory", memoryUsage))
+	builder.WriteString(fmt.Sprintf(fmtString, "🧠 Memory", memoryUsage))
 
-	builder.WriteString(fmt.Sprintf(fmtString, "CPU", cpuUsage))
+	builder.WriteString(fmt.Sprintf(fmtString, "💻 CPU", cpuUsage))
 	builder.WriteString("\n")
 
 	for _, service := range config.Services {
-		builder.WriteString(fmt.Sprintf(fmtString, service.Name, resultMap[service.Service]))
+
+		var result = resultMap[service.Service]
+		if result == "active" {
+			result = "▶️ " + result
+		} else if result == "inactive" {
+			result = "🛑 " + result
+		} else {
+			result = "🤔 " + result
+		}
+
+		builder.WriteString(fmt.Sprintf(fmtString, service.Name, result))
 	}
 	builder.WriteString("```")
 	return builder.String()

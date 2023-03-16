@@ -44,15 +44,15 @@ func HandleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, cha
 				InlineKeyboard: [][]telegram.InlineKeyboardButton{
 					{
 						telegram.InlineKeyboardButton{
-							Text:         "start",
+							Text:         "▶️ start",
 							CallbackData: CallbackData2(service, "start"),
 						},
 						telegram.InlineKeyboardButton{
-							Text:         "stop",
+							Text:         "🛑 stop",
 							CallbackData: CallbackData2(service, "stop"),
 						},
 						telegram.InlineKeyboardButton{
-							Text:         "restart",
+							Text:         "♻️ restart",
 							CallbackData: CallbackData2(service, "restart"),
 						},
 					},
