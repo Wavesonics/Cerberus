@@ -106,9 +106,9 @@ func initApp(auth string, botId string, chatId int64, webhookSecret string) http
 }
 
 var wakeupMessages = []string{
-	"I have awakened!",
-	"I have been summoned yet again.",
-	"I am here to guard the gates.",
+	"I have awakened! ☕️",
+	"I have been summoned yet again. 😈",
+	"I am here to guard the gates. ⛩️",
 }
 
 func postWakeupMessage(botId string, chatId int64) {

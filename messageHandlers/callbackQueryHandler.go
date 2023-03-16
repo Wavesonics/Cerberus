@@ -39,7 +39,7 @@ func HandleCallbackQuery(callbackQuery telegram.CallbackQuery, botId string, cha
 		sendMessageReq := telegram.EditMessageTextBody{
 			ChatID:    &callbackQuery.Message.Chat.ID,
 			MessageID: &callbackQuery.Message.MessageId,
-			Text:      fmt.Sprintf("What action to preform on %s", service),
+			Text:      fmt.Sprintf("🛠️ What action to preform on %s", service),
 			ReplyMarkup: &telegram.InlineKeyboardMarkup{
 				InlineKeyboard: [][]telegram.InlineKeyboardButton{
 					{

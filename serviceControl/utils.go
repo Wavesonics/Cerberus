@@ -56,11 +56,11 @@ func ExecuteServiceAction(serviceName string, action ServiceAction, botId string
 
 		switch action {
 		case Start:
-			fmtStr = "I have brought %s to life."
+			fmtStr = "I have brought %s to life. 🐣"
 		case Stop:
-			fmtStr = "I have killed %s."
+			fmtStr = "I have killed 🗡️ %s."
 		case Restart:
-			fmtStr = "Like a Phoenix %s is reborn."
+			fmtStr = "Like a 🔥🦅 Phoenix %s is reborn. ♻️"
 		}
 
 		message := fmt.Sprintf(fmtStr, serviceName)
