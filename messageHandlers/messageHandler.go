@@ -40,7 +40,31 @@ func HandleMessage(message telegram.Message, botId string, chatId int64, config 
 	}
 }
 
+func getEmojiForStatus(status string) string {
+	var emoji string
+	if status == "active" {
+		emoji = "▶️"
+	} else if status == "inactive" {
+		emoji = "🛑"
+	} else if status == "failed" {
+		emoji = "😵"
+	} else {
+		emoji = "🤔"
+	}
+
+	return emoji
+}
+
+func createServiceString(service config.Service, serviceStatuses map[string]string) string {
+	status := serviceStatuses[service.Name]
+	emoji := getEmojiForStatus(status)
+
+	return service.Name + " " + emoji
+}
+
 func startCommand(message telegram.Message, botId string, config config.ServiceConfig) {
+	serviceStatuses := getStatuses(config)
+
 	numColumns := 3
 	var keyboardButtons [][]telegram.InlineKeyboardButton
 	var buttonRow []telegram.InlineKeyboardButton = nil
@@ -53,8 +77,10 @@ func startCommand(message telegram.Message, botId string, config config.ServiceC
 			buttonRow = []telegram.InlineKeyboardButton{}
 		}
 
+		serviceButtonText := createServiceString(service, serviceStatuses)
+
 		keyboardButton := telegram.InlineKeyboardButton{
-			Text:         service.Name,
+			Text:         serviceButtonText,
 			CallbackData: callbackData1(service.Service),
 		}
 		buttonRow = append(buttonRow, keyboardButton)
@@ -84,9 +110,8 @@ func stopAll(botId string, chatId int64, config config.ServiceConfig) {
 	telegram.SendBotMessageSimple("💀 They have all been killed...", botId, chatId)
 }
 
-func status(botId string, chatId int64, config config.ServiceConfig) {
+func getStatuses(config config.ServiceConfig) map[string]string {
 	resultMap := make(map[string]string)
-	maxLength := 0
 
 	for _, service := range config.Services {
 		out, err := exec.Command("bash", "-c", fmt.Sprintf(`systemctl status %s | grep -Po "(?<=Active: )\w+"`, service.Service)).Output()
@@ -95,8 +120,18 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 		serviceStatus := string(out)
 
 		resultMap[service.Service] = strings.TrimSpace(serviceStatus)
-		if maxLength < len(service.Name) {
-			maxLength = len(service.Name)
+	}
+
+	return resultMap
+}
+
+func status(botId string, chatId int64, config config.ServiceConfig) {
+	serviceStatuses := getStatuses(config)
+	maxLength := 0
+
+	for service := range serviceStatuses {
+		if maxLength < len(service) {
+			maxLength = len(service)
 		}
 	}
 
@@ -110,7 +145,7 @@ func status(botId string, chatId int64, config config.ServiceConfig) {
 	cpuOutString := strings.TrimSpace(string(cpuOut))
 	cpuUsage := calcCpuUsageFromMpstatCommand(cpuOutString)
 
-	result := generateTable(maxLength, config, resultMap, memUsage, cpuUsage)
+	result := generateTable(maxLength, config, serviceStatuses, memUsage, cpuUsage)
 	telegram.SendBotMessage(telegram.SendMessageBody{
 		ChatID:    chatId,
 		Text:      result,
@@ -140,17 +175,9 @@ func generateTable(maxLength int,
 	builder.WriteString("\n")
 
 	for _, service := range config.Services {
-
 		var result = resultMap[service.Service]
-		if result == "active" {
-			result = "▶️ " + result
-		} else if result == "inactive" {
-			result = "🛑 " + result
-		} else if result == "failed" {
-			result = "😵 " + result
-		} else {
-			result = "🤔 " + result
-		}
+		var emoji = getEmojiForStatus(result)
+		result = emoji + "️ " + result
 
 		builder.WriteString(fmt.Sprintf(fmtString, service.Name, result))
 	}
