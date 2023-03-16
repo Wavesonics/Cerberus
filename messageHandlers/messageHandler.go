@@ -119,7 +119,7 @@ func getStatuses(config config.ServiceConfig) map[string]string {
 
 		serviceStatus := string(out)
 
-		resultMap[service.Service] = strings.TrimSpace(serviceStatus)
+		resultMap[service.Name] = strings.TrimSpace(serviceStatus)
 	}
 
 	return resultMap
@@ -175,7 +175,7 @@ func generateTable(maxLength int,
 	builder.WriteString("\n")
 
 	for _, service := range config.Services {
-		var result = resultMap[service.Service]
+		var result = resultMap[service.Name]
 		var emoji = getEmojiForStatus(result)
 		result = emoji + "️ " + result
 
