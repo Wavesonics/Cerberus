@@ -41,13 +41,29 @@ func HandleMessage(message telegram.Message, botId string, chatId int64, config 
 }
 
 func startCommand(message telegram.Message, botId string, config config.ServiceConfig) {
-	var keyboardButtons []telegram.InlineKeyboardButton
-	for _, service := range config.Services {
+	numColumns := 3
+	var keyboardButtons [][]telegram.InlineKeyboardButton
+	var buttonRow []telegram.InlineKeyboardButton = nil
+	for ii, service := range config.Services {
+
+		if ii%numColumns == 0 {
+			if buttonRow != nil {
+				keyboardButtons = append(keyboardButtons, buttonRow)
+				buttonRow = nil
+			}
+			buttonRow = []telegram.InlineKeyboardButton{}
+		}
+
 		keyboardButton := telegram.InlineKeyboardButton{
 			Text:         service.Name,
 			CallbackData: callbackData1(service.Service),
 		}
-		keyboardButtons = append(keyboardButtons, keyboardButton)
+		buttonRow = append(buttonRow, keyboardButton)
+	}
+
+	if buttonRow != nil {
+		keyboardButtons = append(keyboardButtons, buttonRow)
+		buttonRow = nil
 	}
 
 	// Send a new message with the keyboard
@@ -55,7 +71,7 @@ func startCommand(message telegram.Message, botId string, config config.ServiceC
 		ChatID: message.Chat.ID,
 		Text:   "Which Game Server?",
 		ReplyMarkup: &telegram.InlineKeyboardMarkup{
-			InlineKeyboard: [][]telegram.InlineKeyboardButton{keyboardButtons},
+			InlineKeyboard: keyboardButtons,
 		},
 	}
 
@@ -70,7 +86,7 @@ func stopAll(botId string, chatId int64, config config.ServiceConfig) {
 }
 
 func status(botId string, chatId int64, config config.ServiceConfig) {
-	resultMap := make(map[string] string)
+	resultMap := make(map[string]string)
 	maxLength := 0
 
 	for _, service := range config.Services {
