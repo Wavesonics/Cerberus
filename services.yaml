@@ -26,3 +26,6 @@ services:
   - name: Foundry VTT
     service: foundry
     ports: TCP 8120
+  - name: Project Zomboid
+    service: zomboid
+    ports: UDP 8301 8302
